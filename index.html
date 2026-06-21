@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    .container-b {
+    display: flex;
+    gap: 20px;
+}
+  </style>
+  <input type="file" id="fileInput">
+  <div class="container-b">
+
+    <div class="video-area">
+      <video id="video" controls loop style="max-width: 100%;"></video>
+    </div>
+
+    <div class="info-area">
+      <input type="text" placeholder="タイトル（任意）">
+
+      <p><span id="cType">0:00</span> / <span id="duration">0:00</span></p>
+    </div>
+    <script>
+      const myFile = document.getElementById('fileInput');
+      const myVideo = document.getElementById('video');
+      
+myFile.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  const fileURL = URL.createObjectURL(file);
+
+  myVideo.src = fileURL;
+myVideo.play();
+});
+    </script>
+</html>
