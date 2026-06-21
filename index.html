@@ -29,5 +29,19 @@ myFile.addEventListener('change', (event) => {
   myVideo.src = fileURL;
 myVideo.play();
 });
+      const durationDisplay = document.getElementById('duration');
+const currentDisplay = document.getElementById('cType');
+      
+myVideo.addEventListener('loadedmetadata', () => {
+    const totalMinutes = Math.floor(myVideo.duration / 60);
+    const totalSeconds = Math.floor(myVideo.duration % 60).toString().padStart(2, '0');
+    durationDisplay.textContent = `${totalMinutes}:${totalSeconds}`;
+});
+
+myVideo.addEventListener('timeupdate', () => {
+    const currentMinutes = Math.floor(myVideo.currentTime / 60);
+    const currentSeconds = Math.floor(myVideo.currentTime % 60).toString().padStart(2, '0');
+    currentDisplay.textContent = `${currentMinutes}:${currentSeconds}`;
+});
     </script>
 </html>
