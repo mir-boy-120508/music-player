@@ -1,47 +1,742 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Video Player</title>
+
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+    }
+
+    .app {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ファイル選択 */
+
+    .file-area {
+      background: white;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .file-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #007aff;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .file-label:hover {
+      background: #0066d6;
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    #fileName {
+      margin-left: 12px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* メイン */
+
     .container-b {
-    display: flex;
-    gap: 20px;
-}
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* 動画 */
+
+    .video-card {
+      background: #111;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .video-area {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      color: #aaa;
+      text-align: center;
+      pointer-events: none;
+      font-size: 15px;
+    }
+
+    .video-placeholder .icon {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    /* コントロール */
+
+    .controls {
+      padding: 14px 16px 16px;
+      background: #181818;
+      color: white;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 5px;
+      background: #444;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .progress {
+      width: 0%;
+      height: 100%;
+      background: #007aff;
+      border-radius: 10px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-button {
+      border: none;
+      background: transparent;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+    }
+
+    .control-button:hover {
+      background: #333;
+    }
+
+    .time {
+      font-size: 13px;
+      color: #ccc;
+      min-width: 90px;
+    }
+
+    .volume {
+      width: 100px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    /* 情報エリア */
+
+    .info-area {
+      background: white;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 20px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 7px;
+    }
+
+    #titleInput {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 15px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    #titleInput:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    }
+
+    .info-box {
+      margin-top: 20px;
+      background: #f5f5f7;
+      border-radius: 12px;
+      padding: 15px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .info-label {
+      color: #777;
+    }
+
+    .info-value {
+      font-weight: 600;
+    }
+
+    /* スマホ */
+
+    @media (max-width: 750px) {
+      body {
+        padding: 15px;
+      }
+
+      .container-b {
+        grid-template-columns: 1fr;
+      }
+
+      .info-area {
+        padding: 18px;
+      }
+
+      .volume {
+        width: 70px;
+      }
+
+      #fileName {
+        display: block;
+        margin: 10px 0 0;
+      }
+    }
   </style>
-  <input type="file" id="fileInput">
-  <div class="container-b">
+</head>
 
-    <div class="video-area">
-      <video id="video" controls loop style="max-width: 100%;"></video>
+<body>
+
+  <div class="app">
+
+    <!-- ファイル選択 -->
+
+    <div class="file-area">
+
+      <label class="file-label" for="fileInput">
+        📁 動画を選択
+      </label>
+
+      <input
+        type="file"
+        id="fileInput"
+        accept="video/*"
+      >
+
+      <span id="fileName">
+        まだ動画が選択されていません
+      </span>
+
     </div>
 
-    <div class="info-area">
-      <input type="text" placeholder="タイトル（任意）">
 
-      <p><span id="cType">0:00</span> / <span id="duration">0:00</span></p>
+    <!-- メイン -->
+
+    <div class="container-b">
+
+      <!-- 動画 -->
+
+      <div class="video-card">
+
+        <div class="video-area">
+
+          <video
+            id="video"
+            preload="metadata"
+          ></video>
+
+          <div class="video-placeholder" id="placeholder">
+
+            <div class="icon">🎬</div>
+
+            <div>
+              動画を選択してください
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- コントロール -->
+
+        <div class="controls">
+
+          <div
+            class="progress-container"
+            id="progressContainer"
+          >
+            <div
+              class="progress"
+              id="progress"
+            ></div>
+          </div>
+
+
+          <div class="control-row">
+
+            <button
+              class="control-button"
+              id="playButton"
+            >
+              ▶
+            </button>
+
+
+            <div class="time">
+
+              <span id="cType">0:00</span>
+              /
+              <span id="duration">0:00</span>
+
+            </div>
+
+
+            <div class="spacer"></div>
+
+
+            🔊
+
+            <input
+              class="volume"
+              type="range"
+              id="volume"
+              min="0"
+              max="1"
+              step="0.01"
+              value="1"
+            >
+
+
+            <button
+              class="control-button"
+              id="fullscreenButton"
+            >
+              ⛶
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- 情報 -->
+
+      <div class="info-area">
+
+        <h2 class="info-title">
+          動画情報
+        </h2>
+
+
+        <label class="input-label">
+          タイトル
+        </label>
+
+        <input
+          type="text"
+          id="titleInput"
+          placeholder="タイトル（任意）"
+        >
+
+
+        <div class="info-box">
+
+          <div class="info-row">
+
+            <span class="info-label">
+              ファイル
+            </span>
+
+            <span
+              class="info-value"
+              id="infoFile"
+            >
+              未選択
+            </span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="info-label">
+              再生時間
+            </span>
+
+            <span
+              class="info-value"
+              id="infoDuration"
+            >
+              0:00
+            </span>
+
+          </div>
+
+
+          <div class="info-row">
+
+            <span class="info-label">
+              現在位置
+            </span>
+
+            <span
+              class="info-value"
+              id="infoCurrent"
+            >
+              0:00
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
-    <script>
-      const myFile = document.getElementById('fileInput');
-      const myVideo = document.getElementById('video');
-      
-myFile.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  const fileURL = URL.createObjectURL(file);
 
-  myVideo.src = fileURL;
-myVideo.play();
-});
-      const durationDisplay = document.getElementById('duration');
-const currentDisplay = document.getElementById('cType');
-      
-myVideo.addEventListener('loadedmetadata', () => {
-    const totalMinutes = Math.floor(myVideo.duration / 60);
-    const totalSeconds = Math.floor(myVideo.duration % 60).toString().padStart(2, '0');
-    durationDisplay.textContent = `${totalMinutes}:${totalSeconds}`;
-});
+  </div>
 
-myVideo.addEventListener('timeupdate', () => {
-    const currentMinutes = Math.floor(myVideo.currentTime / 60);
-    const currentSeconds = Math.floor(myVideo.currentTime % 60).toString().padStart(2, '0');
-    currentDisplay.textContent = `${currentMinutes}:${currentSeconds}`;
-});
-    </script>
+
+  <script>
+
+    const fileInput =
+      document.getElementById("fileInput");
+
+    const video =
+      document.getElementById("video");
+
+    const fileName =
+      document.getElementById("fileName");
+
+    const infoFile =
+      document.getElementById("infoFile");
+
+    const durationDisplay =
+      document.getElementById("duration");
+
+    const currentDisplay =
+      document.getElementById("cType");
+
+    const infoDuration =
+      document.getElementById("infoDuration");
+
+    const infoCurrent =
+      document.getElementById("infoCurrent");
+
+    const playButton =
+      document.getElementById("playButton");
+
+    const volume =
+      document.getElementById("volume");
+
+    const progress =
+      document.getElementById("progress");
+
+    const progressContainer =
+      document.getElementById("progressContainer");
+
+    const fullscreenButton =
+      document.getElementById("fullscreenButton");
+
+    const placeholder =
+      document.getElementById("placeholder");
+
+
+    let currentURL = null;
+
+
+    // 時間を 0:00 形式にする
+
+    function formatTime(seconds) {
+
+      if (!Number.isFinite(seconds)) {
+        return "0:00";
+      }
+
+      const minutes =
+        Math.floor(seconds / 60);
+
+      const secs =
+        Math.floor(seconds % 60)
+          .toString()
+          .padStart(2, "0");
+
+      return `${minutes}:${secs}`;
+
+    }
+
+
+    // ファイル選択
+
+    fileInput.addEventListener("change", (event) => {
+
+      const file =
+        event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+
+      // 古いURLを解放
+
+      if (currentURL) {
+        URL.revokeObjectURL(currentURL);
+      }
+
+
+      currentURL =
+        URL.createObjectURL(file);
+
+      video.src = currentURL;
+
+
+      fileName.textContent =
+        file.name;
+
+      infoFile.textContent =
+        file.name;
+
+
+      placeholder.style.display =
+        "none";
+
+
+      video.load();
+
+    });
+
+
+    // メタデータ読み込み
+
+    video.addEventListener(
+      "loadedmetadata",
+      () => {
+
+        const time =
+          formatTime(video.duration);
+
+        durationDisplay.textContent =
+          time;
+
+        infoDuration.textContent =
+          time;
+
+        video.volume =
+          volume.value;
+
+      }
+    );
+
+
+    // 再生時間更新
+
+    video.addEventListener(
+      "timeupdate",
+      () => {
+
+        const current =
+          formatTime(video.currentTime);
+
+        const duration =
+          video.duration || 0;
+
+        currentDisplay.textContent =
+          current;
+
+        infoCurrent.textContent =
+          current;
+
+
+        if (duration > 0) {
+
+          const percentage =
+            (video.currentTime / duration) * 100;
+
+          progress.style.width =
+            percentage + "%";
+
+        }
+
+      }
+    );
+
+
+    // 再生・一時停止
+
+    playButton.addEventListener(
+      "click",
+      () => {
+
+        if (video.paused) {
+
+          video.play();
+
+        } else {
+
+          video.pause();
+
+        }
+
+      }
+    );
+
+
+    // ボタン表示変更
+
+    video.addEventListener(
+      "play",
+      () => {
+
+        playButton.textContent =
+          "Ⅱ";
+
+      }
+    );
+
+
+    video.addEventListener(
+      "pause",
+      () => {
+
+        playButton.textContent =
+          "▶";
+
+      }
+    );
+
+
+    // 音量
+
+    volume.addEventListener(
+      "input",
+      () => {
+
+        video.volume =
+          volume.value;
+
+      }
+    );
+
+
+    // プログレスバークリック
+
+    progressContainer.addEventListener(
+      "click",
+      (event) => {
+
+        if (!video.duration) {
+          return;
+        }
+
+
+        const rect =
+          progressContainer.getBoundingClientRect();
+
+        const position =
+          event.clientX - rect.left;
+
+        const percentage =
+          position / rect.width;
+
+
+        video.currentTime =
+          video.duration * percentage;
+
+      }
+    );
+
+
+    // フルスクリーン
+
+    fullscreenButton.addEventListener(
+      "click",
+      async () => {
+
+        if (video.requestFullscreen) {
+
+          await video.requestFullscreen();
+
+        }
+
+      }
+    );
+
+
+    // 動画終了
+
+    video.addEventListener(
+      "ended",
+      () => {
+
+        playButton.textContent =
+          "▶";
+
+      }
+    );
+
+  </script>
+
+</body>
 </html>
